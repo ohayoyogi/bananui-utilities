@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* SPDX-License-Identifier: MIT */
 #pragma once
 #include <gio/gio.h>
 #define BU_NOTE_MAX_BYTES (16 * 1024)

@@ -21,6 +21,8 @@ git apply /path/to/bananui-utilities/patches/libbananui-input.patch
 
 パッチは`src/input.c`と`src/input_method.c`だけを変更し、公開API・ABIは変えない。UTF-8の削除・カーソル、空文字の範囲外参照、文字列の解放を修正する。上流への投稿・取込みは未実施。同等の修正が取り込まれた版では二重適用しない。
 
+libbananuiとこのパッチのライセンスはLGPL-3.0-or-later。アプリのMITライセンスとは区別する。[パッチの著作権・ライセンス](patches/README.md)を参照。
+
 ## その他
 
 Meson >= 0.56、Ninja、Cコンパイラ、pkg-config、GLib >= 2.74、GIO、Pango/Cairoがアプリのビルドに必要。libbananuiのビルドには同ライブラリ側の依存関係も必要。

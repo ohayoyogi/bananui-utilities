@@ -1,8 +1,14 @@
 # Bananui Utilities 0.1
 
-テンキーで使うBananui向けのメモ帳と電卓。GPL-3.0-or-later。
+テンキーで使うBananui向けのメモ帳と電卓。MIT License。
 
 2026-11-09にUbuntu 24.04／WSL2でローカル実装・ホスト検証。ARMビルドと実機での動作確認は未実施。
+
+## ライセンス
+
+アプリ、共通コア、テスト、ビルド設定、スクリプト、アプリ用テーマとdesktopファイル、文書は[MIT License](COPYING.md)。Copyright (c) 2026 ohayoyogi。
+
+`patches/libbananui-input.patch`はlibbananui由来のコードを含むため、LGPL-3.0-or-laterとして扱う。著作権表示とライセンス本文は[patches/README.md](patches/README.md)を参照。依存ライブラリはそれぞれのライセンスに従う。
 
 ## アプリ
 

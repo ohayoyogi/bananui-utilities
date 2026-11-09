@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* SPDX-License-Identifier: MIT */
 #include "ui.h"
 
 void bu_ui_text(cairo_t *cr, const char *text, double x, double y, double width,

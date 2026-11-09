@@ -1,4 +1,5 @@
 #!/bin/sh
+# SPDX-License-Identifier: MIT
 # Storage/arithmetic checks independent of libbananui and device services.
 set -eu
 

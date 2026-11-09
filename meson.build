@@ -1,4 +1,4 @@
-project('bananui-utilities', 'c', version: '0.1.0', license: 'GPL-3.0-or-later',
+project('bananui-utilities', 'c', version: '0.1.0', license: 'MIT',
   meson_version: '>=0.56.0', default_options: ['c_std=gnu11', 'warning_level=2', 'werror=true'])
 add_project_arguments('-Wno-unused-parameter', language: 'c')
 glib = dependency('glib-2.0', version: '>=2.74')

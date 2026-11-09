@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* SPDX-License-Identifier: MIT */
 #include "note-store.h"
 #include "ui.h"
 #include <glib-unix.h>

@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-3.0-or-later
+/* SPDX-License-Identifier: MIT
  * Integration checks against the shared widget, on an isolated compositor.
  */
 #include <bananui/bananui.h>

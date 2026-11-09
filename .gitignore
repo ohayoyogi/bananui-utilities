@@ -1,0 +1,5 @@
+/build/
+/build-*/
+/subprojects/packagecache/
+__pycache__/
+*.pyc

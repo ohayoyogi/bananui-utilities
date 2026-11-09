@@ -1,0 +1,28 @@
+;< "themes/default.ipt"
+[style notes editor]{
+  .[padding [72] [8] [64] [8]]
+  [set font_name ["Noto Sans CJK JP"]]
+  .[font-size [16]]
+}
+[style utility input]{
+  .[hfill]
+  .[hlimit]
+  .[vfill]
+  .[vlimit]
+  .[padding [7]]
+  .[background-color [0x13] [0x25] [0x34] [0xFF]]
+  .[content-color [0xFF] [0xFF] [0xFF] [0xFF]]
+}
+[style utility input :focus]{ [style utility input] }
+[style utility input text]{
+  .[hfill]
+  .[hlimit]
+  .[vfill]
+  .[vlimit]
+  .[clip]
+  .[break words]
+}
+[build utility input]{
+  [box ["utility input text"]]
+  [put [#\n 0] endbox]
+}

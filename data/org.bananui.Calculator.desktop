@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=電卓
+Name[en]=Calculator
+Comment=数字キーと方向キーで使う電卓
+Exec=bananui-calculator
+Icon=accessories-calculator
+Terminal=false
+Categories=Utility;Calculator;
+StartupWMClass=org.bananui.Calculator

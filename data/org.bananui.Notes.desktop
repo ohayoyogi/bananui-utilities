@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=メモ帳
+Name[en]=Notes
+Comment=テンキーで書くメモ帳
+Exec=bananui-notes
+Icon=accessories-text-editor
+Terminal=false
+Categories=Utility;TextEditor;
+StartupWMClass=org.bananui.Notes

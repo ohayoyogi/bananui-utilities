@@ -1,4 +1,9 @@
 ;< "themes/default.ipt"
+[style files editor]{
+  .[padding [114] [8] [72] [8]]
+  [set font_name ["Noto Sans CJK JP"]]
+  .[font-size [16]]
+}
 [style notes editor]{
   .[padding [72] [8] [64] [8]]
   [set font_name ["Noto Sans CJK JP"]]

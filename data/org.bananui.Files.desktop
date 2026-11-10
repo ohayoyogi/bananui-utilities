@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=データフォルダ
+Name[en]=Data Folder
+Comment=テンキーで使うファイル一覧とプレビュー
+Exec=bananui-files
+Icon=system-file-manager
+Terminal=false
+Categories=Utility;FileManager;
+StartupWMClass=org.bananui.Files

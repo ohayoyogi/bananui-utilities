@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=J2MEアプリ
+Name[en]=J2ME Applications
+Comment=J2MEアプリの登録と起動
+Exec=bananui-j2me %U
+Icon=applications-games
+Terminal=false
+Categories=Utility;Game;
+MimeType=application/java-archive;application/x-java-archive;text/vnd.sun.j2me.app-descriptor;
+StartupWMClass=org.bananui.J2ME

@@ -1,8 +1,8 @@
-# Bananui Utilities 0.1
+# Bananui Utilities 0.2
 
-テンキーで使うBananui向けのメモ帳と電卓。MIT License。
+テンキーで使うBananui向けのメモ帳、電卓、データフォルダ、J2MEアプリ管理。MIT License。
 
-2026-11-09にUbuntu 24.04／WSL2でローカル実装・ホスト検証。ARMビルドと実機での動作確認は未実施。
+Ubuntu 24.04／WSL2でローカル実装・ホスト検証。ARMビルドと実機での動作確認は未実施。
 
 ## ライセンス
 
@@ -53,12 +53,38 @@
 
 入力した順に計算する方式。`2＋3×4＝`は20になる。表示は最大12桁相当、計算は浮動小数点で行う。ゼロ除算や桁あふれを説明し、数字の入力でやり直せる。PC用には`+ - * / . =`も受け付ける。履歴・メモリー演算・関数計算は初期版の範囲外。
 
+### データフォルダ
+
+本体と追加の保存先を選び、方向キーと決定でフォルダを移動する。左ソフトキーの操作一覧から、名前変更、通常ファイルのコピー・切取り・貼付け、新しいフォルダ、削除確認、詳細表示、保存先の切替を選べる。右ソフト／クリアは上の階層か前の画面へ戻る。終話はアプリを終了する。
+
+- 本体の既定フォルダ：`$XDG_DATA_HOME/bananui-utils/files`（通常は`~/.local/share/bananui-utils/files`）。`--root PATH`で変更できる。
+- 追加の保存先：マウント済みで取り外し可能な保存先をGIOで列挙する。`--sd-root PATH`でSDとして表示するフォルダを明示することもできる。カードの自動マウントは行わない。
+- テキスト：128KiB以内のUTF-8を折返し表示し、上下キーでスクロール。
+- 画像：GdkPixbufが扱える形式を縮小プレビュー。元の画像は変更しない。32MiB／6,400万画素を超える画像はプレビューしない。
+- JAR/JAD：J2MEアプリ管理へファイルを渡す。登録は管理画面側の確認後に行う。対応範囲はJ2ME側の説明を参照。
+- その他のファイル：関連付けられたアプリで開く。
+
+同名の既存ファイルは上書きしない。コピー・切取りは単独の通常ファイルが対象で、フォルダの再帰コピーは行わない。シンボリックリンクは一覧へ表示するが、リンク先へ移動したり内容を開いたりしない。保存先が取り外された場合はエラーを表示する。
+
+削除操作は、同じ保存先の`.bananui-trash/<UUID>/<元の名前>`へ移動する。フォルダの内容も保持する。完全削除とごみ箱の復元画面は初期版にない。復元が必要なら保存先のごみ箱から手動で戻せる。
+
+J2ME管理からのファイル選択には`--pick-j2me`を使う。この場合は通常のデータフォルダと別の選択画面を開き、JAR/JADを管理画面へ渡すと選択画面を閉じる。
+
+### J2MEアプリ管理
+
+micromidpの登録済みアプリを一覧し、詳細・起動・登録確認・削除確認を提供する。suite storeの一覧と永続IDをruntimeから取得し、アプリ側で独自の登録データベースを作らない。実行時はWaylandでphocへ接続するmicromidpを使う。
+
+実行ファイルとruntime資材の場所は`$XDG_CONFIG_HOME/bananui-utils/runtime.ini`で設定する。対応版と設定・操作は[docs/J2ME.md](docs/J2ME.md)を参照。
+
 ## 構成
 
 - `src/note-store.*`：GLib/GIOだけに依存する保存・一覧・下書きの処理。
 - `src/calculator.*`：GLibと標準数学ライブラリだけに依存する計算処理。
+- `src/file-store.*`：保存先の階層移動、ファイル操作、ゴミ箱、テキスト読出し。
+- `src/files.c`：データフォルダの画面、プレビュー、他アプリへの受渡し。
+- `src/j2me.*`、`src/j2me-app.c`：runtimeの一覧応答・起動引数と管理画面。
 - `src/notes.c`、`src/calculator-app.c`、`src/ui.*`：Bananui／Cairo／Pangoの表示とキー操作。
-- `.desktop`ファイル：`org.bananui.Notes.desktop`、`org.bananui.Calculator.desktop`。既存のメニューに通常のアプリとして登録できる。
+- `.desktop`ファイル：Notes、Calculator、Files、J2MEの4件。既存のメニューに通常のアプリとして登録できる。
 
 アプリ独自のシェル専用D-Bus APIやKYF31のデバイスノードには依存しない。表示はlibbananui、入力はWaylandのtext-input-v3と対応IMEが利用できる環境を前提とする。別のUIへ移す場合も、保存・計算のコアは分けて流用できる。
 
@@ -70,7 +96,7 @@
 
 ## ホストでビルド・確認
 
-Ubuntu 24.04／WSL2で確認した。開発依存はMeson、Ninja、Cコンパイラ、GLib/GIO、Pango/Cairo、librsvg、Wayland/protocols、xkbcommon。日本語表示にはNoto CJK等のフォントが必要。画面試験はphoc、wtype、grim、D-Busを使う。
+Ubuntu 24.04／WSL2で確認した。開発依存はMeson、Ninja、Cコンパイラ、GLib/GIO、Pango/Cairo、GdkPixbuf、librsvg、Wayland/protocols、xkbcommon。日本語表示にはNoto CJK等のフォントが必要。画面試験はphoc、wtype、grim、D-Busを使う。
 
 必要な修正を適用したlibbananuiを先にビルド・インストールし、このリポジトリのルートで実行する。
 
@@ -83,12 +109,24 @@ meson install -C build
 
 libbananuiを専用prefixへ配置した場合は、その`lib/pkgconfig`（環境によっては`lib/<triplet>/pkgconfig`）を`PKG_CONFIG_PATH`へ追加し、実行時の共有ライブラリ検索パスも設定する。Mesonのインストール先も必要に応じて同じprefixにする。
 
-保存・計算の7ケースは`meson test`で実行する。画面試験にはWaylandセッションが必要。`build/test-input-widget`は稼働中のコンポジタと対応する入力環境に接続する回帰試験で、自動テストには登録していない。
+保存・計算、ファイル操作、J2MEの応答・引数のテストは`meson test`で実行する。画面試験にはWaylandセッションが必要。`build/test-input-widget`は稼働中のコンポジタと対応する入力環境に接続する回帰試験で、自動テストには登録していない。
 
-保存・計算だけをUIなしでメモリ検査する場合（Cコンパイラ、pkg-config、GLib/GIOの開発ファイルが必要）：
+保存・計算・ファイル操作・J2MEの応答と引数をUIなしでメモリ検査する場合（Cコンパイラ、pkg-config、GLib/GIOの開発ファイルが必要）：
 
 ```sh
 sh scripts/check-core-asan.sh
+```
+
+データフォルダの画面検証は次で実行できる。`PREFIX`はlibbananuiとBananuiシェルを配置したテスト用prefixへ置き換える。合成ファイルだけを用意し、独立したheadless phocセッションで名前変更、コピー、ゴミ箱、プレビューを確認する。JAR受渡しの試験用受信プログラムは引数だけを検査し、本物のJ2MEランタイムの試験とは区別している。
+
+```sh
+BU_TEST_PREFIX=PREFIX sh scripts/smoke-files.sh
+```
+
+J2ME管理の画面試験は次で実行する。合成runtimeとテスト用Waylandウィンドウを使い、登録確認、複数MIDletの選択、起動引数、管理画面への復帰、削除確認、データフォルダからの受渡しを確認する。この試験ではJavaを実行しない。実際のmicromidpとの検証は[docs/J2ME.md](docs/J2ME.md)に記録する。
+
+```sh
+BU_TEST_PREFIX=PREFIX sh scripts/smoke-j2me.sh
 ```
 
 2026-11-09の画面試験は独立したheadless phocセッションと合成したメモデータを使った。日本語変換、保存・再起動・下書き復元、未保存の破棄確認、外部変更時の別メモ保存、ゴミ箱、電卓のキー操作を確認した。入力部品の検証では空欄、511バイト＋終端のバッファ境界、31行の移動・スクロール、日本語のカーソルを扱った。シェルを含む統合試験の手順・画面記録はKYF31側の構成記録で管理する。

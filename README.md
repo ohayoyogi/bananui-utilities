@@ -8,7 +8,7 @@ Ubuntu 24.04／WSL2でローカル実装・ホスト検証。ARMビルドと実�
 
 アプリ、共通コア、テスト、ビルド設定、スクリプト、アプリ用テーマとdesktopファイル、文書は[MIT License](COPYING.md)。Copyright (c) 2026 ohayoyogi。
 
-`patches/libbananui-input.patch`はlibbananui由来のコードを含むため、LGPL-3.0-or-laterとして扱う。著作権表示とライセンス本文は[patches/README.md](patches/README.md)を参照。依存ライブラリはそれぞれのライセンスに従う。
+依存ライブラリはそれぞれのライセンスに従う。
 
 ## アプリ
 
@@ -88,17 +88,11 @@ micromidpの登録済みアプリを一覧し、詳細・起動・登録確認�
 
 アプリ独自のシェル専用D-Bus APIやKYF31のデバイスノードには依存しない。表示はlibbananui、入力はWaylandのtext-input-v3と対応IMEが利用できる環境を前提とする。別のUIへ移す場合も、保存・計算のコアは分けて流用できる。
 
-## 共通入力部品の修正
-
-検証に使用したlibbananuiには`src/input.c`と`src/input_method.c`の修正を含む。空欄をIMEへ報告する際の範囲外参照、UTF-8削除時に余計な領域まで読む処理、別文書を設定した後にカーソルがUTF-8の途中へ残る問題を修正した。併せて文字列の解放を整理。公開API・ABIは変更していない。
-
-このアプリの確認には修正版を使用した。古いライブラリをそのまま使う前提にはしない。依存版と修正の適用方法は[DEPENDENCIES.md](DEPENDENCIES.md)を参照。ライブラリ本体はこのリポジトリに含めず、当面は再現用の差分だけを`patches/`に保持する。
-
 ## ホストでビルド・確認
 
 Ubuntu 24.04／WSL2で確認した。開発依存はMeson、Ninja、Cコンパイラ、GLib/GIO、Pango/Cairo、GdkPixbuf、librsvg、Wayland/protocols、xkbcommon。日本語表示にはNoto CJK等のフォントが必要。画面試験はphoc、wtype、grim、D-Busを使う。
 
-必要な修正を適用したlibbananuiを先にビルド・インストールし、このリポジトリのルートで実行する。
+[依存版](DEPENDENCIES.md)に記載した、共通入力の修正を含むlibbananuiを先にビルド・インストールする。その後、このリポジトリのルートで実行する。
 
 ```sh
 meson setup build --prefix="$HOME/.local"

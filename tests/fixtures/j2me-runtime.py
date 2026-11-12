@@ -28,6 +28,7 @@ if "--list-suites" in args:
         notify("suite 42\tSynthetic\tTest\t1.0")
         # Deliberately omit the MIDlet and suite-count trailers.
     elif state["installed"]:
+        notify("error suite 7: properties unreadable")
         notify("suite 42\tテストアプリ\tGUI fixture\t1.0")
         notify("midlet 42\t1\t一つ目\torg.example.First")
         notify("midlet 42\t2\t二つ目\torg.example.Second")

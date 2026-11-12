@@ -20,7 +20,7 @@ typedef struct {
   char *executable, *lib_dir, *data_dir, *cache_dir, *keymap, *font;
 } BuJ2meConfig;
 
-GPtrArray *bu_j2me_parse_list(const char *output, GError **error);
+GPtrArray *bu_j2me_parse_list(const char *output, guint *skipped_count, GError **error);
 /* Runtime adapter boundary: UI code must not interpret native protocol records. */
 gboolean bu_j2me_check_completion(const char *output, const char *operation,
                                  const char *suite_id, GError **error);

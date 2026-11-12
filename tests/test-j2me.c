@@ -15,7 +15,9 @@ static const char *valid_output =
 static void test_parse_valid(void)
 {
   g_autoptr(GError) error = NULL;
-  GPtrArray *list = bu_j2me_parse_list(valid_output, &error);
+  guint skipped = 99;
+  GPtrArray *list = bu_j2me_parse_list(valid_output, &skipped, &error);
+  g_assert_cmpuint(skipped, ==, 0);
   g_assert_no_error(error); g_assert_nonnull(list); g_assert_cmpuint(list->len, ==, 1);
   BuJ2meSuite *s = g_ptr_array_index(list, 0);
   g_assert_cmpstr(s->id, ==, "42"); g_assert_cmpstr(s->name, ==, "Test app");
@@ -30,7 +32,7 @@ static void test_parse_incomplete(void)
   g_autoptr(GError) error = NULL;
   g_autoptr(GString) incomplete = g_string_new(valid_output);
   g_assert_cmpuint(g_string_replace(incomplete, "[ldev] midlet 42\t2\tSecond\torg.example.Second\n", "", 1), ==, 1);
-  GPtrArray *list = bu_j2me_parse_list(incomplete->str, &error);
+  GPtrArray *list = bu_j2me_parse_list(incomplete->str, NULL, &error);
   g_assert_null(list); g_assert_error(error, g_quark_from_static_string("bananui-j2me-error"), 1);
 }
 
@@ -56,7 +58,7 @@ static void test_argv_boundaries(void)
 static void assert_bad_catalog(const char *text)
 {
   g_autoptr(GError) error = NULL;
-  g_autoptr(GPtrArray) list = bu_j2me_parse_list(text, &error);
+  g_autoptr(GPtrArray) list = bu_j2me_parse_list(text, NULL, &error);
   g_assert_null(list);
   g_assert_error(error, g_quark_from_static_string("bananui-j2me-error"), 1);
 }
@@ -95,6 +97,8 @@ static const Mutation mutations[] = {
   { "invalid-utf8", "First\t", "\xff\t" },
   { "premature-bye", "[ldev] suites 1", "[ldev] bye status=0\n[ldev] suites 1" },
   { "error-record", "[ldev] suites 1", "[ldev] error store unreadable\n[ldev] suites 1" },
+  { "malformed-skip", "[ldev] suites 1", "[ldev] error suite 7: \n[ldev] suites 1" },
+  { "skip-during-suite", "[ldev] midlets 42 2", "[ldev] error suite 7: properties unreadable\n[ldev] midlets 42 2" },
   { "failed-exit", "bye status=0", "bye status=3" },
   { "post-trailer-midlet", "[ldev] suites 1", "[ldev] midlet 42\t3\tLate\torg.Late\n[ldev] suites 1" },
   { "trailing-suite", "bye status=0\n", "bye status=0\n[ldev] suite 50\tLate\tV\t1\n" },
@@ -120,7 +124,7 @@ static void test_catalog_boundaries(void)
   assert_bad_catalog(large);
   g_autoptr(GError) error = NULL;
   g_autoptr(GPtrArray) empty = bu_j2me_parse_list(
-    "diagnostic log\n[ldev] hello protocol=1\r\n[ldev] suites 0\r\n[ldev] bye status=0\r\n", &error);
+    "diagnostic log\n[ldev] hello protocol=1\r\n[ldev] suites 0\r\n[ldev] bye status=0\r\n", NULL, &error);
   g_assert_no_error(error); g_assert_nonnull(empty); g_assert_cmpuint(empty->len, ==, 0);
 
   g_autoptr(GString) text = g_string_new("[ldev] hello protocol=1\n");
@@ -131,7 +135,7 @@ static void test_catalog_boundaries(void)
     g_string_append_printf(text, "[ldev] midlets %u 50\n", id);
   }
   g_string_append(text, "[ldev] suites 2\n[ldev] bye status=0\n");
-  g_autoptr(GPtrArray) list = bu_j2me_parse_list(text->str, &error);
+  g_autoptr(GPtrArray) list = bu_j2me_parse_list(text->str, NULL, &error);
   g_assert_no_error(error); g_assert_nonnull(list); g_assert_cmpuint(list->len, ==, 2);
   BuJ2meSuite *suite = g_ptr_array_index(list, 0);
   g_assert_cmpstr(suite->name, ==, "  日本語  ");
@@ -284,6 +288,25 @@ static void test_completion(void)
   g_assert_nonnull(error);
 }
 
+static void test_catalog_skipped_suite(void)
+{
+  g_autoptr(GString) text = g_string_new(valid_output);
+  g_string_replace(text, "[ldev] suite 42",
+                   "[ldev] error suite 7: properties unreadable\n[ldev] suite 42", 1);
+  g_string_replace(text, "[ldev] suites 1",
+                   "[ldev] error suite 8: MIDlet properties unreadable\n[ldev] suites 1", 1);
+  guint skipped = 0;
+  g_autoptr(GError) error = NULL;
+  g_autoptr(GPtrArray) list = bu_j2me_parse_list(text->str, &skipped, &error);
+  g_assert_no_error(error);
+  g_assert_nonnull(list);
+  g_assert_cmpuint(list->len, ==, 1);
+  g_assert_cmpstr(((BuJ2meSuite *)g_ptr_array_index(list, 0))->id, ==, "42");
+  g_assert_cmpuint(skipped, ==, 2);
+  g_string_replace(text, "status=0", "status=3", 1);
+  assert_bad_catalog(text->str);
+}
+
 int main(int argc, char **argv)
 {
   g_test_init(&argc, &argv, NULL);
@@ -291,6 +314,7 @@ int main(int argc, char **argv)
   g_test_add_func("/j2me/list/incomplete", test_parse_incomplete);
   g_test_add_func("/j2me/process/argv-boundaries", test_argv_boundaries);
   g_test_add_func("/j2me/list/boundaries", test_catalog_boundaries);
+  g_test_add_func("/j2me/list/skipped-suite", test_catalog_skipped_suite);
   g_test_add_func("/j2me/process/invalid-args", test_invalid_args);
   g_test_add_func("/j2me/process/operation-args", test_operation_args);
   g_test_add_func("/j2me/process/completion", test_completion);

@@ -41,11 +41,12 @@ static gboolean decimal(const char *text, guint *value)
   return TRUE;
 }
 
-GPtrArray *bu_j2me_parse_list(const char *output, GError **error)
+GPtrArray *bu_j2me_parse_list(const char *output, guint *skipped_count, GError **error)
 {
   GPtrArray *suites = g_ptr_array_new_with_free_func(bu_j2me_suite_free);
   enum { HELLO, SUITE, MIDLET, BYE, DONE } state = HELLO;
   BuJ2meSuite *current = NULL;
+  guint skipped = 0;
   gboolean failed = FALSE;
   if (!output || strlen(output) > 2 * 1024 * 1024 || !g_utf8_validate(output, -1, NULL)) {
     g_set_error(error, j2me_error_quark(), J2ME_ERROR_PROTOCOL,
@@ -65,6 +66,15 @@ GPtrArray *bu_j2me_parse_list(const char *output, GError **error)
       if (state != HELLO || !(g_str_equal(line, "hello protocol=1") ||
                              g_str_has_prefix(line, "hello protocol=1 "))) failed = TRUE;
       else state = SUITE;
+    } else if (g_str_has_prefix(line, "error suite ")) {
+      const char *start = line + strlen("error suite ");
+      const char *separator = strstr(start, ": ");
+      g_autofree char *id_text = separator ? g_strndup(start, separator - start) : NULL;
+      guint id;
+      if (state != SUITE || !separator || !separator[2] || !decimal(id_text, &id) || !id)
+        failed = TRUE;
+      else
+        skipped++;
     } else if (g_str_has_prefix(line, "error ")) {
       failed = TRUE;
     } else if (g_str_has_prefix(line, "suite ")) {
@@ -120,6 +130,8 @@ GPtrArray *bu_j2me_parse_list(const char *output, GError **error)
                 "ランタイムの一覧応答が不完全か、失敗しました");
     g_ptr_array_unref(suites); return NULL;
   }
+  if (skipped_count)
+    *skipped_count = skipped;
   return suites;
 }
 

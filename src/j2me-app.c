@@ -11,6 +11,7 @@ typedef struct {
   GPtrArray *suites; GSubprocess *child; Page page; Op op;
   guint selected, midlet, timeout, shutdown_timeout, poll, term, interrupt;
   char *jar, *message, *active_suite; gboolean failed, timed_out, closing_requested;
+  guint skipped_suites;
 } App;
 
 static void info(App *a, const char *s) { g_free(a->message); a->message = g_strdup(s); if (a->window) bRequestFrame(a->window); }
@@ -76,11 +77,16 @@ static void finished(App *a, const char *out, const char *err, gboolean ok)
   a->timed_out = FALSE;
   if (a->closing_requested) { g_application_quit(a->application); return; }
   if (ok && op == LIST_OP) {
-    g_autoptr(GError) e = NULL; GPtrArray *items = bu_j2me_parse_list(out, &e);
+    guint skipped = 0;
+    g_autoptr(GError) e = NULL;
+    GPtrArray *items = bu_j2me_parse_list(out, &skipped, &e);
     if (!items) info(a, e->message);
     else { g_clear_pointer(&a->suites, g_ptr_array_unref); a->suites = items;
       if (a->selected >= items->len) a->selected = items->len ? items->len - 1 : 0;
-      a->page = LIST; info(a, items->len ? "一覧を更新しました" : "登録済みアプリはありません");
+      a->skipped_suites = skipped;
+      a->page = LIST;
+      info(a, items->len ? "一覧を更新しました" :
+              skipped ? "表示できるアプリはありません" : "登録済みアプリはありません");
       if (a->jar) open_jar(a); }
   } else if (ok && op == INSTALL_OP) {
     g_autoptr(GError) e = NULL;
@@ -145,7 +151,11 @@ static void refresh(App *a) { launch(a, LIST_OP, NULL, 0, NULL); }
 static int draw(void *event, void *data)
 {
   App *a = data; bWindow *w = a->window; cairo_t *cr = w->renderer; BuJ2meSuite *s = current(a);
-  bu_ui_background(w, "Javaアプリ", a->op == NONE ? "アプリ一覧・起動・登録" : "処理中");
+  g_autofree char *warning = NULL;
+  if (a->op == NONE && a->page == LIST && a->skipped_suites)
+    warning = g_strdup_printf("読めないアプリ %u 件", a->skipped_suites);
+  bu_ui_background(w, "Javaアプリ", a->op != NONE ? "処理中" :
+                   warning ? warning : "アプリ一覧・起動・登録");
   if (a->op != NONE || a->page == CONFIG || a->page == ERROR) {
     cairo_set_source_rgb(cr, .8, .88, .95);
     bu_ui_text(cr, a->message ? a->message : "", 12, 104, w->width - 24, 12, FALSE, PANGO_ALIGN_CENTER, 6);
@@ -154,7 +164,7 @@ static int draw(void *event, void *data)
     bu_ui_text(cr, "このJARを登録しますか？", 12, 94, w->width - 24, 16, TRUE, PANGO_ALIGN_CENTER, 2);
     g_autofree char *basename = g_path_get_basename(a->jar);
     bu_ui_text(cr, basename, 12, 142, w->width - 24, 10, FALSE, PANGO_ALIGN_CENTER, 2);
-    bu_ui_text(cr, "登録するとアプリと保存データが追加されます", 12, 218, w->width - 24, 12, FALSE, PANGO_ALIGN_CENTER, 2);
+    bu_ui_text(cr, "登録済みのアプリは更新される場合があります", 12, 218, w->width - 24, 12, FALSE, PANGO_ALIGN_CENTER, 2);
   } else if (a->page == REMOVE) {
     cairo_set_source_rgb(cr, 1, 1, 1);
     bu_ui_text(cr, s ? s->name : "", 12, 105, w->width - 24, 16, TRUE, PANGO_ALIGN_CENTER, 2);
